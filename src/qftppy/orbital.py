@@ -18,12 +18,12 @@ def compute_orbital_tensor(qft, pa, pb, rank):
     p_ab = 0.5 * (pa - pb)
     P2 = qft.dot(P, P).unsqueeze(-1)
 
-    # kperp^μ = p_ab^μ - P^μ (P·p_ab) / P²  — direct Gram-Schmidt, stays contravariant
+    # kperp^mu = p_ab^mu - P^mu (P.p_ab) / P^2 -- direct Gram-Schmidt, stays contravariant
     P_dot_pab = qft.dot(P, p_ab)
     kperp = p_ab - P * (P_dot_pab / P2.squeeze(-1)).unsqueeze(-1)
     kperp_sq = qft.dot(kperp, kperp).unsqueeze(-1).unsqueeze(-1)
 
-    # g̃^{μν} = g^{μν} - P^μ P^ν / P²  — contravariant projector for rank≥2 trace terms
+    # gbar^{mu,nu} = g^{mu,nu} - P^mu P^nu / P^2 -- contravariant projector for rank>=2 trace terms
     PP = torch.einsum("ni,nj->nij", P, P)  # contravariant P, no lowering
     gbar = qft.g.unsqueeze(0) - PP / P2.unsqueeze(-1)
 
@@ -53,10 +53,12 @@ def compute_orbital_tensor(qft, pa, pb, rank):
         term3 = (1.0 / 35.0) * (kperp_sq * kperp_sq).unsqueeze(-1).unsqueeze(-1) * (3.0 * qft.symmetrize(gg))
         return (35.0 / 8.0) * (kkkk - term2 + term3)
 
-    # Generalized recursion for rank > 4
-    current_rank = 5
-    # Recursively call self (this function) for rank 4
+    # Recursion for rank > 4, following qft++ OrbitalTensor::SetP4:
+    #   z = (2l-1)/l^2 [ sum_i Perm(x % gbar; i, l-1) - 2/(2l-1) sum_{j<i} Perm(Perm(gbar % x; 0, i); 1, j) ]
+    #   x = z * kperp
+    # where l is the rank being built and "*" contracts through the metric.
     x = compute_orbital_tensor(qft, pa, pb, 4)
+    kperp_lower = kperp @ qft.g
 
     def swap_indices(T, mu, nu):
         dims = list(range(len(T.shape)))
@@ -64,32 +66,19 @@ def compute_orbital_tensor(qft, pa, pb, rank):
         dims[mu + 1], dims[nu + 1] = dims[nu + 1], dims[mu + 1]
         return T.permute(*dims)
 
-    while current_rank <= rank:
-        # x is rank L_prev
-        L_prev = current_rank - 1
+    for current_rank in range(5, rank + 1):
+        xg = qft.outer_product(x, gbar)  # rank current_rank + 1
+        gx = qft.outer_product(gbar, x)
 
-        # xg = x % gbar
-        xg = qft.outer_product(x, gbar)  # Rank L_prev + 2
-
-        # z calculation
-        z = swap_indices(xg, 0, L_prev - 1)
-        for i in range(1, L_prev):
-            z += swap_indices(xg, i, L_prev - 1)
+        z = swap_indices(xg, 0, current_rank - 1)
+        for i in range(1, current_rank):
+            z = z + swap_indices(xg, i, current_rank - 1)
             for j in range(i):
-                gx = qft.outer_product(gbar, x)
-                # ((gbar%x).Permute(0,i)).Permute(1,j)
-                term = swap_indices(swap_indices(gx, 0, i), 1, j)
-                z += (-2.0 / (2.0 * L_prev - 1.0)) * term
+                z = z + (-2.0 / (2.0 * current_rank - 1.0)) * swap_indices(swap_indices(gx, 0, i), 1, j)
+        z = z * (2.0 * current_rank - 1.0) / (current_rank * current_rank)
 
-        z *= (2.0 * L_prev - 1.0) / (L_prev * L_prev)
-
-        # x = z * kperp
-        # z: (N, indices..., rho), kperp: (N, rho)
+        # x = z * kperp: contract the last index of z with kperp through the metric
         s_z = "".join(chr(ord("a") + i) for i in range(current_rank + 1))
-        s_k = s_z[-1]
-        s_res = s_z[:-1]
-        x = torch.einsum(f"n{s_z},n{s_k}->n{s_res}", z, kperp)
-
-        current_rank += 1
+        x = torch.einsum(f"n{s_z},n{s_z[-1]}->n{s_z[:-1]}", z, kperp_lower)
 
     return x

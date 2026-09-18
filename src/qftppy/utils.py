@@ -116,23 +116,21 @@ def regge_propagator(t, s, a, b, spin, sig, exp_fact=1):
     """
     alpha = a * t + b
 
-    # Use torch.lgamma for better numerical stability if needed,
-    # but here we follow QFT++'s Gamma port.
-
-    def torch_gamma(z):
-        # PyTorch has built-in gamma
-        return torch.exp(torch.special.gammaln(z))
-
     numerator = (s ** (alpha - float(spin))) * math.pi * a
     comp_dtype = torch.complex64 if t.dtype == torch.float32 else torch.complex128
     numerator = numerator.to(comp_dtype)
     numerator *= float(sig) + float(exp_fact) * torch.exp(-1j * math.pi * alpha)
 
     gamma_arg = alpha + 1.0 - float(spin)
-    # Handle the gamma reflection formula for negative args if necessary,
-    # but torch.special.gamma handles it.
-    denominator = 2.0 * torch.sin(math.pi * gamma_arg) * torch_gamma(gamma_arg)
-
-    # Handle singularities (gamma_arg <= 0)
-    # This is a simplification; QFT++ has specific logic for <= 0.
+    # Denominator 2 sin(pi z) Gamma(z), evaluated as in qft++: for z < 0 use the reflection
+    # formula 2 pi / (|z| Gamma(|z|)) (gammaln only gives |Gamma|, which would lose the sign),
+    # and its limit 2 pi at z = 0.
+    abs_arg = gamma_arg.abs()
+    safe_abs = torch.where(abs_arg > 0, abs_arg, torch.ones_like(abs_arg))
+    safe_pos = torch.where(gamma_arg > 0, gamma_arg, torch.ones_like(gamma_arg))
+    positive = 2.0 * torch.sin(math.pi * gamma_arg) * torch.exp(torch.special.gammaln(safe_pos))
+    negative = 2.0 * math.pi / (safe_abs * torch.exp(torch.special.gammaln(safe_abs)))
+    denominator = torch.where(
+        gamma_arg > 0, positive, torch.where(gamma_arg < 0, negative, torch.full_like(gamma_arg, 2.0 * math.pi))
+    )
     return numerator / denominator

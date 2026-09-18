@@ -54,15 +54,19 @@ class QFTNative:
         s2 = "".join(chr(ord("a") + rank1 + i) for i in range(rank2))
         return torch.einsum(f"n{s1},n{s2}->n{s1}{s2}", t1, t2)
 
-    def contract(self, t1, t2, n=1):
+    def contract(self, t1, t2, n=1, batched1=None, batched2=None):
         """
         Contracts the last n indices of t1 with the first n indices of t2 using Minkowski metric.
         Handles both batched (N, ...) and static (...) tensors.
+
+        batched1, batched2: whether t1 / t2 have a leading batch dimension. If None, this is
+        guessed from the shape (a leading dimension other than 4 means batched). The guess is
+        ambiguous for a batch of exactly 4 events, so pass the flags explicitly when N may be 4.
+        n=0 gives the outer product (via outer_product, which ignores batched1/batched2 and
+        requires both t1 and t2 to be batched) and n=-1 contracts as many indices as possible.
         """
-        # Determine if t1 or t2 are batched
-        # If shape[0] is not 4, it's almost certainly a batch dimension N
-        is_batched1 = len(t1.shape) > 0 and t1.shape[0] != 4
-        is_batched2 = len(t2.shape) > 0 and t2.shape[0] != 4
+        is_batched1 = batched1 if batched1 is not None else (len(t1.shape) > 0 and t1.shape[0] != 4)
+        is_batched2 = batched2 if batched2 is not None else (len(t2.shape) > 0 and t2.shape[0] != 4)
 
         r1 = len(t1.shape) - (1 if is_batched1 else 0)
         r2 = len(t2.shape) - (1 if is_batched2 else 0)

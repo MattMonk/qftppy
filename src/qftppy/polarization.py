@@ -100,7 +100,9 @@ class PolVectorNative:
                 # bp = beta . eps_rest_spatial
                 bp = beta[:, 0] * eps_rest[:, 1] + beta[:, 1] * eps_rest[:, 2] + beta[:, 2] * eps_rest[:, 3]
 
-                res = torch.zeros_like(eps_rest)
+                # Start from the rest-frame vector so events at rest (beta^2 ~ 0, boost = identity)
+                # keep their polarization; moving events are overwritten below.
+                res = eps_rest.clone()
                 res[:, 0] = gamma * bp
                 mask = beta2 > 1e-9
                 fac = (gamma[mask] - 1.0) / beta2[mask]
