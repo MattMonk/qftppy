@@ -7,3 +7,4 @@ dist/
 .pixi/
 *.pyc
 .ruff_cache/
+cpp_reference/build/

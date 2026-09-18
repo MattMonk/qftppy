@@ -32,6 +32,20 @@ pixi run build  # build the sdist and wheel into dist/
 
 `pixi shell -e dev` gives a shell in the development environment.
 
+### Comparing against the original C++ qft++
+
+The `cpp` environment builds the original [qft++](https://github.com/jdalseno/qft) from source (pinned commit) together with small pybind11 wrappers in `cpp_reference/`, and runs `tests/cpp/`, which checks qftppy against it numerically:
+
+```bash
+pixi run -e cpp test-cpp
+```
+
+After changing anything in `cpp_reference/`, rebuild it with `pixi reinstall -e cpp cpp_reference`.
+
+The build applies one local patch to qft++ (`cpp_reference/patches/tensorindex-permute.patch`): upstream `TensorIndex::Permute()` never terminates for rank 4, which hangs `Tensor::Symmetric()` and therefore orbital tensors of rank 4 and above. Regenerate it with `cpp_reference/patches/make_patch.py` rather than editing it by hand.
+
+Both test sets run in GitHub Actions on pushes to main and on pull requests.
+
 To keep the code-base clean, enable `pre-commit` with
 
 ```bash

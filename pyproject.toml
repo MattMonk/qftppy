@@ -37,6 +37,7 @@ select = ["E", "F", "W", "I"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["tests"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -61,6 +62,20 @@ lint = "ruff check . && ruff format --check ."
 fmt = "ruff check --fix . && ruff format ."
 build = "python -m build"
 
+[tool.pixi.feature.cpp.dependencies]
+cxx-compiler = "*"
+cmake = ">=3.24"
+git = "*"
+numpy = "*"
+pytest = "*"
+
+[tool.pixi.feature.cpp.pypi-dependencies]
+cpp_reference = { path = "cpp_reference" }
+
+[tool.pixi.feature.cpp.tasks]
+test-cpp = "pytest tests/cpp"
+
 [tool.pixi.environments]
 default = { solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
+cpp = { features = ["cpp"], solve-group = "default" }
