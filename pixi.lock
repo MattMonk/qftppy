@@ -2998,7 +2998,7 @@ packages:
 - pypi: ./
   name: qftppy
   version: 0.1.0
-  sha256: 732625bca8513d1feb688904b7c19e9487859c99d99f1ac1ef4a7f5d34d86b0d
+  sha256: 53ade903dfe0aa0339bde8e67c1d23a26bca3ad7e65cb5f0be54b580d60f3b8b
   requires_dist:
   - torch>=2.0
   requires_python: '>=3.10'
