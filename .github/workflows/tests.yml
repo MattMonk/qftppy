@@ -9,10 +9,11 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.6
+      - uses: actions/checkout@v7.0.1
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
           environments: dev
+          frozen: true # release PRs bump the version without relocking
           cache: true
       - run: pixi run lint
       - run: pixi run test
@@ -25,9 +26,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: prefix-dev/setup-pixi@v0.9.6
+      - uses: actions/checkout@v7.0.1
+      - uses: prefix-dev/setup-pixi@v0.10.2
         with:
           environments: cpp
+          frozen: true # release PRs bump the version without relocking
           cache: true
       - run: pixi run -e cpp test-cpp

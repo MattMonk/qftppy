@@ -11,13 +11,11 @@ gamma = qftppy.dirac_gamma()
 
 ## Installation
 
-With pip, from within this directory
-
 ```bash
-pip install .
+pip install qftppy
 ```
 
-Use `pip install -e .` for an editable install if you expect to make changes to the package.
+To install from a checkout instead, run `pip install .` in this directory (or `pip install -e .` for an editable install if you expect to make changes to the package).
 
 ## Developing
 
@@ -53,3 +51,11 @@ pixi run -e dev pre-commit install
 ```
 
 This runs several checks plus `ruff` linting and formatting on each commit. The max line length is 120 characters.
+
+## Releasing
+
+Releases are automated with [release-please](https://github.com/googleapis/release-please) and published to [PyPI](https://pypi.org/project/qftppy/) with trusted publishing:
+
+1. Merge changes into `main` as squash-merged pull requests whose titles follow [Conventional Commits](https://www.conventionalcommits.org/) (`fix: ...` for a patch release, `feat: ...` for a minor release, `feat!: ...` for a breaking change, which bumps the minor version while below 1.0; `chore:`, `docs:`, `test:`, `ci:` etc. do not trigger a release). A CI check enforces the title format.
+2. release-please keeps a release pull request open that bumps the version in `pyproject.toml` and updates `CHANGELOG.md`.
+3. Merging the release pull request tags the release, creates a GitHub release and publishes the package to PyPI.
