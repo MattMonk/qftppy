@@ -1,0 +1,26 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    -   id: check-yaml
+    -   id: check-json
+    -   id: check-added-large-files
+        args: ['--maxkb=2000']
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-case-conflict
+-   repo: https://github.com/google/yapf
+    rev: v0.43.0
+    hooks:
+    -   id: yapf
+        # Allowing parallelization might lead to problems due
+        # to cache files not being protected correctly inside
+        # yapf when using pickle
+        # (See https://github.com/google/yapf/issues/1164)
+        require_serial: true
+        args: [--style, "{based_on_style: pep8, column_limit: 120}"]
+-   repo: https://github.com/pycqa/flake8
+    rev: 7.3.0
+    hooks:
+    -   id: flake8
+        args: [--max-line-length=120]
