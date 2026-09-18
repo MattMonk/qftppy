@@ -12,7 +12,7 @@ def compute_orbital_tensor(qft, pa, pb, rank):
     dtype = qft.dtype
 
     if rank == 0:
-        return torch.ones((N, ), device=device, dtype=dtype)
+        return torch.ones((N,), device=device, dtype=dtype)
 
     P = pa + pb
     p_ab = 0.5 * (pa - pb)
@@ -24,7 +24,7 @@ def compute_orbital_tensor(qft, pa, pb, rank):
     kperp_sq = qft.dot(kperp, kperp).unsqueeze(-1).unsqueeze(-1)
 
     # g̃^{μν} = g^{μν} - P^μ P^ν / P²  — contravariant projector for rank≥2 trace terms
-    PP = torch.einsum('ni,nj->nij', P, P)  # contravariant P, no lowering
+    PP = torch.einsum("ni,nj->nij", P, P)  # contravariant P, no lowering
     gbar = qft.g.unsqueeze(0) - PP / P2.unsqueeze(-1)
 
     if rank == 1:
@@ -32,28 +32,25 @@ def compute_orbital_tensor(qft, pa, pb, rank):
 
     if rank == 2:
         # 1.5 * (kperp_mu * kperp_nu - 1/3 * kperp^2 * gbar_{mu,nu})
-        kk = torch.einsum('ni,nj->nij', kperp, kperp)
+        kk = torch.einsum("ni,nj->nij", kperp, kperp)
         return 1.5 * (kk - (1.0 / 3.0) * kperp_sq * gbar)
 
     if rank == 3:
         # 2.5 * (kkk - 1/5 * kperp^2 * 3 * Sym(gbar % kperp))
-        kkk = torch.einsum('ni,nj,nk->nijk', kperp, kperp, kperp)
+        kkk = torch.einsum("ni,nj,nk->nijk", kperp, kperp, kperp)
         gk = qft.outer_product(gbar, kperp)
-        term2 = (1.0 / 5.0) * kperp_sq.unsqueeze(-1) * (3.0 *
-                                                        qft.symmetrize(gk))
+        term2 = (1.0 / 5.0) * kperp_sq.unsqueeze(-1) * (3.0 * qft.symmetrize(gk))
         return 2.5 * (kkk - term2)
 
     if rank == 4:
         # (35/8) * (kkkk - 1/7 * kperp^2 * 6 * Sym(gbar % kk) + 1/35 * (kperp^2)^2 * 3 * Sym(gbar % gbar))
-        kkkk = torch.einsum('ni,nj,nk,nl->nijkl', kperp, kperp, kperp, kperp)
-        kk = torch.einsum('ni,nj->nij', kperp, kperp)
+        kkkk = torch.einsum("ni,nj,nk,nl->nijkl", kperp, kperp, kperp, kperp)
+        kk = torch.einsum("ni,nj->nij", kperp, kperp)
         gkk = qft.outer_product(gbar, kk)
         gg = qft.outer_product(gbar, gbar)
 
-        term2 = (1.0 / 7.0) * kperp_sq.unsqueeze(-1).unsqueeze(-1) * (
-            6.0 * qft.symmetrize(gkk))
-        term3 = (1.0 / 35.0) * (kperp_sq * kperp_sq).unsqueeze(-1).unsqueeze(
-            -1) * (3.0 * qft.symmetrize(gg))
+        term2 = (1.0 / 7.0) * kperp_sq.unsqueeze(-1).unsqueeze(-1) * (6.0 * qft.symmetrize(gkk))
+        term3 = (1.0 / 35.0) * (kperp_sq * kperp_sq).unsqueeze(-1).unsqueeze(-1) * (3.0 * qft.symmetrize(gg))
         return (35.0 / 8.0) * (kkkk - term2 + term3)
 
     # Generalized recursion for rank > 4
@@ -88,10 +85,10 @@ def compute_orbital_tensor(qft, pa, pb, rank):
 
         # x = z * kperp
         # z: (N, indices..., rho), kperp: (N, rho)
-        s_z = "".join(chr(ord('a') + i) for i in range(current_rank + 1))
+        s_z = "".join(chr(ord("a") + i) for i in range(current_rank + 1))
         s_k = s_z[-1]
         s_res = s_z[:-1]
-        x = torch.einsum(f'n{s_z},n{s_k}->n{s_res}', z, kperp)
+        x = torch.einsum(f"n{s_z},n{s_k}->n{s_res}", z, kperp)
 
         current_rank += 1
 

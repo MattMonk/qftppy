@@ -1,10 +1,14 @@
+from importlib.metadata import version
+
 from .core import QFTNative
+from .matrices import dirac_gamma, dirac_gamma5, dirac_sigma, pauli_sigma
 from .orbital import compute_orbital_tensor
-from .spin import Spin
-from .matrices import pauli_sigma, dirac_gamma, dirac_gamma5, dirac_sigma
-from .spinors import DiracSpinorNative, DiracAntiSpinorNative
-from .utils import clebsch, wigner_d, regge_propagator
 from .polarization import PolVectorNative
+from .spin import Spin
+from .spinors import DiracAntiSpinorNative, DiracSpinorNative
+from .utils import clebsch, regge_propagator, wigner_d
+
+__version__ = version("qftppy")
 
 __all__ = [
     "QFTNative",

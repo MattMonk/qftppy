@@ -32,13 +32,11 @@ class Spin:
         return f"{self._numer}/{self._denom}"
 
     def __add__(self, other):
-        val = self.value() + (other.value()
-                              if isinstance(other, Spin) else float(other))
+        val = self.value() + (other.value() if isinstance(other, Spin) else float(other))
         return Spin.from_float(val)
 
     def __sub__(self, other):
-        val = self.value() - (other.value()
-                              if isinstance(other, Spin) else float(other))
+        val = self.value() - (other.value() if isinstance(other, Spin) else float(other))
         return Spin.from_float(val)
 
     def __mul__(self, other):

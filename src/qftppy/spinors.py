@@ -1,4 +1,5 @@
 import torch
+
 from .matrices import dirac_gamma, pauli_sigma
 
 
@@ -28,9 +29,7 @@ class DiracSpinorNative:
         epm = (E + mass).view(N, 1, 1)
 
         px, py, pz = p4[:, 1], p4[:, 2], p4[:, 3]
-        sigP = (self.sigma[0] * px.view(N, 1, 1) +
-                self.sigma[1] * py.view(N, 1, 1) +
-                self.sigma[2] * pz.view(N, 1, 1))
+        sigP = self.sigma[0] * px.view(N, 1, 1) + self.sigma[1] * py.view(N, 1, 1) + self.sigma[2] * pz.view(N, 1, 1)
 
         chi = torch.zeros((N, 2, 1), device=self.device, dtype=self.dtype)
         if mz > 0:
@@ -51,10 +50,12 @@ class DiracSpinorNative:
     def projector(self, p4, mass):
         """Spin-1/2 projector (p_slash + m) / 2m"""
         N = p4.shape[0]
-        p_slash = (p4[:, 0].view(N, 1, 1) * self.gamma[0] -
-                   p4[:, 1].view(N, 1, 1) * self.gamma[1] -
-                   p4[:, 2].view(N, 1, 1) * self.gamma[2] -
-                   p4[:, 3].view(N, 1, 1) * self.gamma[3])
+        p_slash = (
+            p4[:, 0].view(N, 1, 1) * self.gamma[0]
+            - p4[:, 1].view(N, 1, 1) * self.gamma[1]
+            - p4[:, 2].view(N, 1, 1) * self.gamma[2]
+            - p4[:, 3].view(N, 1, 1) * self.gamma[3]
+        )
         eye = torch.eye(4, device=self.device, dtype=self.dtype).unsqueeze(0)
         return (p_slash + eye * mass) / (2.0 * mass)
 
@@ -77,9 +78,7 @@ class DiracAntiSpinorNative(DiracSpinorNative):
         epm = (E + mass).view(N, 1, 1)
 
         px, py, pz = p4[:, 1], p4[:, 2], p4[:, 3]
-        sigP = (self.sigma[0] * px.view(N, 1, 1) +
-                self.sigma[1] * py.view(N, 1, 1) +
-                self.sigma[2] * pz.view(N, 1, 1))
+        sigP = self.sigma[0] * px.view(N, 1, 1) + self.sigma[1] * py.view(N, 1, 1) + self.sigma[2] * pz.view(N, 1, 1)
 
         # chi for anti-particle: chi(1/2) = [0, 1]^T, chi(-1/2) = [1, 0]^T
         chi = torch.zeros((N, 2, 1), device=self.device, dtype=self.dtype)
@@ -96,9 +95,11 @@ class DiracAntiSpinorNative(DiracSpinorNative):
     def projector(self, p4, mass):
         """Anti-particle projector (p_slash - m) / 2m"""
         N = p4.shape[0]
-        p_slash = (p4[:, 0].view(N, 1, 1) * self.gamma[0] -
-                   p4[:, 1].view(N, 1, 1) * self.gamma[1] -
-                   p4[:, 2].view(N, 1, 1) * self.gamma[2] -
-                   p4[:, 3].view(N, 1, 1) * self.gamma[3])
+        p_slash = (
+            p4[:, 0].view(N, 1, 1) * self.gamma[0]
+            - p4[:, 1].view(N, 1, 1) * self.gamma[1]
+            - p4[:, 2].view(N, 1, 1) * self.gamma[2]
+            - p4[:, 3].view(N, 1, 1) * self.gamma[3]
+        )
         eye = torch.eye(4, device=self.device, dtype=self.dtype).unsqueeze(0)
         return (p_slash - eye * mass) / (2.0 * mass)

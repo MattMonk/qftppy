@@ -1,5 +1,7 @@
-import torch
 import math
+
+import torch
+
 from .utils import clebsch
 
 
@@ -17,8 +19,7 @@ class PolVectorNative:
     def _boost_vectors(self, pols, p4):
         """Boosts a batch of tensors by the velocity of p4"""
         N = p4.shape[0]
-        bx, by, bz = p4[:, 1] / p4[:, 0], p4[:, 2] / p4[:, 0], p4[:, 3] / p4[:,
-                                                                             0]
+        bx, by, bz = p4[:, 1] / p4[:, 0], p4[:, 2] / p4[:, 0], p4[:, 3] / p4[:, 0]
 
         # We can use the QFTNative.orbital_tensor's logic for boosting or
         # implement a general Lorentz transformation.
@@ -28,8 +29,7 @@ class PolVectorNative:
         gamma = 1.0 / torch.sqrt(1.0 - beta2)
 
         # Lorentz transformation matrix Lambda^mu_nu
-        Lambda = torch.eye(4, device=self.device,
-                           dtype=self.dtype).unsqueeze(0).repeat(N, 1, 1)
+        Lambda = torch.eye(4, device=self.device, dtype=self.dtype).unsqueeze(0).repeat(N, 1, 1)
         Lambda[:, 0, 0] = gamma
         Lambda[:, 0, 1] = -gamma * bx
         Lambda[:, 0, 2] = -gamma * by
@@ -60,7 +60,7 @@ class PolVectorNative:
             perm[2], perm[2 + i] = perm[2 + i], perm[2]
             res = res.permute(perm)
             # Contract Lambda with the Lorentz index at position 2
-            res = torch.einsum('nij,n...j->n...i', Lambda, res)
+            res = torch.einsum("nij,n...j->n...i", Lambda, res)
             # Undo the permutation for the next index
             perm = list(range(res.ndim))
             perm[2], perm[2 + i] = perm[2 + i], perm[2]
@@ -76,9 +76,7 @@ class PolVectorNative:
         N = p4.shape[0]
         if spin == 1:
             # Rest frame eps(mz)
-            eps_rest = torch.zeros((N, 4),
-                                   device=self.device,
-                                   dtype=self.dtype)
+            eps_rest = torch.zeros((N, 4), device=self.device, dtype=self.dtype)
             if mz == 1:
                 eps_rest[:, 1] = -1.0 / math.sqrt(2.0)
                 eps_rest[:, 2] = -1.0j / math.sqrt(2.0)
@@ -100,20 +98,15 @@ class PolVectorNative:
                 gamma = 1.0 / torch.sqrt(1.0 - beta2)
 
                 # bp = beta . eps_rest_spatial
-                bp = (beta[:, 0] * eps_rest[:, 1] +
-                      beta[:, 1] * eps_rest[:, 2] +
-                      beta[:, 2] * eps_rest[:, 3])
+                bp = beta[:, 0] * eps_rest[:, 1] + beta[:, 1] * eps_rest[:, 2] + beta[:, 2] * eps_rest[:, 3]
 
                 res = torch.zeros_like(eps_rest)
                 res[:, 0] = gamma * bp
                 mask = beta2 > 1e-9
                 fac = (gamma[mask] - 1.0) / beta2[mask]
-                res[mask,
-                    1] = eps_rest[mask, 1] + fac * beta[mask, 0] * bp[mask]
-                res[mask,
-                    2] = eps_rest[mask, 2] + fac * beta[mask, 1] * bp[mask]
-                res[mask,
-                    3] = eps_rest[mask, 3] + fac * beta[mask, 2] * bp[mask]
+                res[mask, 1] = eps_rest[mask, 1] + fac * beta[mask, 0] * bp[mask]
+                res[mask, 2] = eps_rest[mask, 2] + fac * beta[mask, 1] * bp[mask]
+                res[mask, 3] = eps_rest[mask, 3] + fac * beta[mask, 2] * bp[mask]
                 return res
             else:
                 # Photon case (simplification)
@@ -143,7 +136,7 @@ class PolVectorNative:
         """Calculates spin-S projection operator"""
         if spin == 1:
             # P_mu_nu = -g_mu_nu + P_mu*P_nu/m^2
-            PP = torch.einsum('ni,nj->nij', p4, p4)
+            PP = torch.einsum("ni,nj->nij", p4, p4)
             if mass > 0:
                 return -self.qft.g.unsqueeze(0) + PP / (mass * mass)
             else:

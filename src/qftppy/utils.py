@@ -1,5 +1,6 @@
-import torch
 import math
+
+import torch
 
 
 def clebsch(j1, m1, j2, m2, J, M):
@@ -43,20 +44,30 @@ def clebsch(j1, m1, j2, m2, J, M):
 
         d0 = dfact(nu)
         exp = nu + (ij2 + im2) // 2
-        n0 = (-1.0)**exp
+        n0 = (-1.0) ** exp
 
-        term = (n0 * dfact(n1) * dfact(n2)) / (d0 * dfact(d1) * dfact(d2) *
-                                               dfact(d3))
+        term = (n0 * dfact(n1) * dfact(n2)) / (d0 * dfact(d1) * dfact(d2) * dfact(d3))
         sum_val += term
         nu += 1
 
     if sum_val == 0:
         return 0.0
 
-    num = (iJ + 1) * dfact((iJ + ij1 - ij2) / 2) * dfact((iJ - ij1 + ij2) / 2) * \
-        dfact((ij1 + ij2 - iJ) / 2) * dfact((iJ + iM) / 2) * dfact((iJ - iM) / 2)
-    den = dfact((ij1 + ij2 + iJ) / 2 + 1) * dfact((ij1 - im1) / 2) * \
-        dfact((ij1 + im1) / 2) * dfact((ij2 - im2) / 2) * dfact((ij2 + im2) / 2)
+    num = (
+        (iJ + 1)
+        * dfact((iJ + ij1 - ij2) / 2)
+        * dfact((iJ - ij1 + ij2) / 2)
+        * dfact((ij1 + ij2 - iJ) / 2)
+        * dfact((iJ + iM) / 2)
+        * dfact((iJ - iM) / 2)
+    )
+    den = (
+        dfact((ij1 + ij2 + iJ) / 2 + 1)
+        * dfact((ij1 - im1) / 2)
+        * dfact((ij1 + im1) / 2)
+        * dfact((ij2 - im2) / 2)
+        * dfact((ij2 + im2) / 2)
+    )
 
     return math.sqrt(num / den) * sum_val
 
@@ -78,7 +89,7 @@ def wigner_d(j, m, n, beta):
     j_m_n = (J - N) // 2
 
     kk = math.factorial(j_p_m) * math.factorial(j_m_m) * math.factorial(j_p_n) * math.factorial(j_m_n)
-    const_term = ((-1.0)**j_p_m) * math.sqrt(kk)
+    const_term = ((-1.0) ** j_p_m) * math.sqrt(kk)
 
     k_low = max(0, m_p_n)
     k_hi = min(j_p_m, j_p_n)
@@ -93,8 +104,7 @@ def wigner_d(j, m, n, beta):
 
         facs = math.factorial(k) * math.factorial(jmk) * math.factorial(jnk) * math.factorial(kmn2)
 
-        sum_term += ((-1.0)**k) * \
-                    (torch.cos(beta/2.0)**kmn1 * torch.sin(beta/2.0)**jmnk) / facs
+        sum_term += ((-1.0) ** k) * (torch.cos(beta / 2.0) ** kmn1 * torch.sin(beta / 2.0) ** jmnk) / facs
 
     return const_term * sum_term
 
@@ -113,11 +123,10 @@ def regge_propagator(t, s, a, b, spin, sig, exp_fact=1):
         # PyTorch has built-in gamma
         return torch.exp(torch.special.gammaln(z))
 
-    numerator = (s**(alpha - float(spin))) * math.pi * a
+    numerator = (s ** (alpha - float(spin))) * math.pi * a
     comp_dtype = torch.complex64 if t.dtype == torch.float32 else torch.complex128
     numerator = numerator.to(comp_dtype)
-    numerator *= (float(sig) +
-                  float(exp_fact) * torch.exp(-1j * math.pi * alpha))
+    numerator *= float(sig) + float(exp_fact) * torch.exp(-1j * math.pi * alpha)
 
     gamma_arg = alpha + 1.0 - float(spin)
     # Handle the gamma reflection formula for negative args if necessary,

@@ -1,13 +1,13 @@
 import torch
 
 
-def pauli_sigma(device='cpu', dtype=None):
+def pauli_sigma(device="cpu", dtype=None):
     """
     Returns the Pauli sigma matrices sigma^1, sigma^2, sigma^3.
     Shape: (3, 2, 2)
     """
     if dtype is None:
-        dtype = torch.complex64 if device == 'mps' else torch.complex128
+        dtype = torch.complex64 if device == "mps" else torch.complex128
     sigma = torch.zeros((3, 2, 2), device=device, dtype=dtype)
     # sigma^1
     sigma[0, 0, 1] = 1.0
@@ -21,14 +21,14 @@ def pauli_sigma(device='cpu', dtype=None):
     return sigma
 
 
-def dirac_gamma(device='cpu', dtype=None):
+def dirac_gamma(device="cpu", dtype=None):
     """
     Returns the Dirac gamma matrices gamma^0, gamma^1, gamma^2, gamma^3.
     Shape: (4, 4, 4)
     Representation: Standard Dirac representation (same as qft++).
     """
     if dtype is None:
-        dtype = torch.complex64 if device == 'mps' else torch.complex128
+        dtype = torch.complex64 if device == "mps" else torch.complex128
     gamma = torch.zeros((4, 4, 4), device=device, dtype=dtype)
     sigma = pauli_sigma(device, dtype)
     eye = torch.eye(2, device=device, dtype=dtype)
@@ -45,14 +45,14 @@ def dirac_gamma(device='cpu', dtype=None):
     return gamma
 
 
-def dirac_gamma5(device='cpu', dtype=None):
+def dirac_gamma5(device="cpu", dtype=None):
     """
     Returns the gamma^5 matrix.
     gamma^5 = i * gamma^0 * gamma^1 * gamma^2 * gamma^3
     Shape: (4, 4)
     """
     if dtype is None:
-        dtype = torch.complex64 if device == 'mps' else torch.complex128
+        dtype = torch.complex64 if device == "mps" else torch.complex128
     g5 = torch.zeros((4, 4), device=device, dtype=dtype)
     # Representation used in qft++: [[0, I], [I, 0]]
     eye = torch.eye(2, device=device, dtype=dtype)
@@ -61,18 +61,17 @@ def dirac_gamma5(device='cpu', dtype=None):
     return g5
 
 
-def dirac_sigma(device='cpu', dtype=None):
+def dirac_sigma(device="cpu", dtype=None):
     """
     Returns the Dirac sigma matrices sigma^{mu,nu} = i/2 * [gamma^mu, gamma^nu].
     Shape: (4, 4, 4, 4)
     """
     if dtype is None:
-        dtype = torch.complex64 if device == 'mps' else torch.complex128
+        dtype = torch.complex64 if device == "mps" else torch.complex128
     gamma = dirac_gamma(device, dtype)
     sigma_munu = torch.zeros((4, 4, 4, 4), device=device, dtype=dtype)
     for mu in range(4):
         for nu in range(4):
             # i/2 * (g_mu * g_nu - g_nu * g_mu)
-            sigma_munu[mu, nu] = 0.5j * (gamma[mu] @ gamma[nu] -
-                                         gamma[nu] @ gamma[mu])
+            sigma_munu[mu, nu] = 0.5j * (gamma[mu] @ gamma[nu] - gamma[nu] @ gamma[mu])
     return sigma_munu
